@@ -72,23 +72,61 @@ const formatPrice = (price) =>
     maximumFractionDigits: 0,
   }).format(price);
 
-function BackendStatus() {
-  const [status, setStatus] = useState("Checking...");
+function DatabaseStatus() {
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://unmodesty-api.onrender.com/connection-test")
+    fetch("https://unmodesty-api.onrender.com/database-test")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.text();
+        return res.json();
       })
-      .then((data) => setStatus(`Laravel: ${data}`))
-      .catch((error) => setStatus(`Laravel: Error - ${error.message}`));
+      .then((data) => setResult(data))
+      .catch((error) => {
+        setResult({
+          status: "error",
+          message: error.message,
+        });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <p style={{ color: "red", fontSize: "16px" }}>
-      {status}
-    </p>
+    <section
+      style={{
+        padding: "16px",
+        marginBottom: "20px",
+        background: "#f1f5f9",
+        borderRadius: "8px",
+        color: "#1e293b",
+      }}
+    >
+      <h3>Supabase Connection Test</h3>
+
+      {loading ? (
+        <p>Fetching Supabase data...</p>
+      ) : result?.status === "success" ? (
+        <>
+          <p style={{ color: "green" }}>
+            Connected to Supabase!
+          </p>
+
+          <pre
+            style={{
+              whiteSpace: "pre-wrap",
+              overflowWrap: "anywhere",
+            }}
+          >
+            {JSON.stringify(result.data, null, 2)}
+          </pre>
+        </>
+      ) : (
+        <p style={{ color: "red" }}>
+          Database Error: {result?.message}
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -124,7 +162,7 @@ function Auctions() {
 
   return (
     <main className="auctions-page">
-      <BackendStatus />
+      <DatabaseStatus />
 
       <section className="auctions-heading">
         <p className="hero-label">UNMODESTY MARKETPLACE</p>
