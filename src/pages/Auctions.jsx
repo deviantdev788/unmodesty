@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";import { Link } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+
 const sampleAuctions = [
   {
     id: 1,
@@ -75,14 +78,18 @@ function BackendStatus() {
   useEffect(() => {
     fetch("https://unmodesty-api.onrender.com/connection-test")
       .then((res) => {
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.text();
       })
-      .then(() => setStatus("Connected"))
-      .catch(() => setStatus("Not connected"));
+      .then((data) => setStatus(`Laravel: ${data}`))
+      .catch((error) => setStatus(`Laravel: Error - ${error.message}`));
   }, []);
 
-  return <p>Laravel: {status}</p>;
+  return (
+    <p style={{ color: "red", fontSize: "16px" }}>
+      {status}
+    </p>
+  );
 }
 
 function Auctions() {
@@ -118,6 +125,7 @@ function Auctions() {
   return (
     <main className="auctions-page">
       <BackendStatus />
+
       <section className="auctions-heading">
         <p className="hero-label">UNMODESTY MARKETPLACE</p>
         <h1>Temukan lelang pilihanmu.</h1>
@@ -183,14 +191,12 @@ function Auctions() {
                 <span>Berakhir {auction.endsIn}</span>
               </div>
 
-
-<Link
-  to={`/auctions/${auction.id}`}
-  className="auction-button auction-detail-link"
->
-  Lihat Detail
-</Link>
-
+              <Link
+                to={`/auctions/${auction.id}`}
+                className="auction-button auction-detail-link"
+              >
+                Lihat Detail
+              </Link>
             </div>
           </article>
         ))}
