@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-
+import { useState, useEffect } from "react";import { Link } from "react-router-dom";
 const sampleAuctions = [
   {
     id: 1,
@@ -71,6 +69,22 @@ const formatPrice = (price) =>
     maximumFractionDigits: 0,
   }).format(price);
 
+function BackendStatus() {
+  const [status, setStatus] = useState("Checking...");
+
+  useEffect(() => {
+    fetch("https://unmodesty-api.onrender.com/connection-test")
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.text();
+      })
+      .then(() => setStatus("Connected"))
+      .catch(() => setStatus("Not connected"));
+  }, []);
+
+  return <p>Laravel: {status}</p>;
+}
+
 function Auctions() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Semua");
@@ -103,6 +117,7 @@ function Auctions() {
 
   return (
     <main className="auctions-page">
+      <BackendStatus />
       <section className="auctions-heading">
         <p className="hero-label">UNMODESTY MARKETPLACE</p>
         <h1>Temukan lelang pilihanmu.</h1>
