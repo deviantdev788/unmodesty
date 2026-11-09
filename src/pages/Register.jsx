@@ -1,16 +1,22 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Register() {
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setMessage("");
 
     if (password.length < 8) {
       setMessage("Kata sandi harus terdiri dari minimal 8 karakter.");
@@ -22,9 +28,22 @@ function Register() {
       return;
     }
 
-    setMessage(
-      "Form siap digunakan. Hubungkan ke server Laravel untuk membuat akun."
-    );
+    setLoading(true);
+
+    try {
+      await register({
+        name,
+        email,
+        password,
+        password_confirmation: confirmPassword,
+      });
+
+      navigate("/");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,12 +107,12 @@ function Register() {
             required
           />
 
-          <button type="submit" className="auth-submit">
-            Buat Akun
+          <button type="submit" className="auth-submit" disabled={loading}>
+            {loading ? "Memproses..." : "Buat Akun"}
           </button>
 
           {message && (
-            <p className="auth-message" role="status">
+            <p className="auth-message" role="alert">
               {message}
             </p>
           )}

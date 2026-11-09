@@ -1,17 +1,29 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setMessage(
-      "Form siap digunakan. Hubungkan ke server Laravel untuk masuk ke akun."
-    );
+    setMessage("");
+    setLoading(true);
+
+    try {
+      await login({ email, password });
+      navigate("/");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,12 +62,12 @@ function Login() {
             required
           />
 
-          <button type="submit" className="auth-submit">
-            Masuk
+          <button type="submit" className="auth-submit" disabled={loading}>
+            {loading ? "Memproses..." : "Masuk"}
           </button>
 
           {message && (
-            <p className="auth-message" role="status">
+            <p className="auth-message" role="alert">
               {message}
             </p>
           )}
