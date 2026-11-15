@@ -55,6 +55,9 @@ function AuctionDetail() {
   const [now, setNow] = useState(Date.now());
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageFullscreen, setImageFullscreen] = useState(false);
+  const [bidSearch, setBidSearch] = useState("");
+  const [bidSort, setBidSort] = useState("newest");
+  const [bidPage, setBidPage] = useState(1);
 
   const fetchAuction = async () => {
     setError("");
@@ -179,6 +182,33 @@ function AuctionDetail() {
   const auctionImages = auction.images || [];
   const selectedImage = auctionImages[selectedImageIndex] || auctionImages[0];
   const bids = auction.bids || [];
+  const bidsPerPage = 8;
+
+const filteredBids = [...bids]
+  .filter((item) =>
+    (item.user?.name || "Pengguna")
+      .toLowerCase()
+      .includes(bidSearch.trim().toLowerCase())
+  )
+  .sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime() || 0;
+    const dateB = new Date(b.created_at).getTime() || 0;
+
+    return bidSort === "newest"
+      ? dateB - dateA
+      : dateA - dateB;
+  });
+
+const totalBidPages = Math.max(
+  1,
+  Math.ceil(filteredBids.length / bidsPerPage)
+);
+
+const displayedBids = filteredBids.slice(
+  (bidPage - 1) * bidsPerPage,
+  bidPage * bidsPerPage
+);
+
   const currentPrice = Number(auction.current_price);
   const ended =
     auction.status !== "active" ||
@@ -346,35 +376,105 @@ function AuctionDetail() {
         </section>
       </div>
 
-      <section className="detail-bids">
-        <h2>Riwayat Penawaran</h2>
+<section className="detail-bids">
+  <h2>Riwayat Penawaran</h2>
 
-        {bids.length === 0 ? (
-          <p className="detail-state">Belum ada penawaran untuk barang ini.</p>
-        ) : (
-          <div className="detail-bid-list">
-            {bids.map((item) => {
-              const isWinner =
-                Number(item.id) === Number(auction.selected_bid_id);
+  <div className="bid-history-controls">
+    <input
+      type="search"
+      className="bid-history-search"
+      placeholder="Cari nama penawar..."
+      value={bidSearch}
+      onChange={(event) => {
+        setBidSearch(event.target.value);
+        setBidPage(1);
+      }}
+    />
 
-              return (
-                <div className="detail-bid-item" key={item.id}>
-                  <div>
-                    <strong>
-                      {item.user?.name || "Pengguna"}
-                      {isWinner && (
-                        <span className="bid-winner-label">Pemenang</span>
-                      )}
-                    </strong>
-                    <span>{formatDate(item.created_at)}</span>
-                  </div>
-                  <strong>{formatPrice(item.amount)}</strong>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+    <select
+      className="bid-history-sort"
+      value={bidSort}
+      onChange={(event) => {
+        setBidSort(event.target.value);
+        setBidPage(1);
+      }}
+    >
+      <option value="newest">Terbaru</option>
+      <option value="oldest">Terlama</option>
+    </select>
+  </div>
+
+  {displayedBids.length === 0 ? (
+    <p className="bid-history-empty">
+      {bids.length === 0
+        ? "Belum ada penawaran untuk barang ini."
+        : "Tidak ada penawaran yang cocok dengan pencarian."}
+    </p>
+  ) : (
+    <>
+      <div className="detail-bid-list">
+        {displayedBids.map((item) => {
+          const isWinner =
+            Number(item.id) === Number(auction.selected_bid_id);
+
+          return (
+            <div className="detail-bid-item" key={item.id}>
+              <div>
+                <strong>
+                  {item.user?.name || "Pengguna"}
+                  {isWinner && (
+                    <span className="bid-winner-label">Pemenang</span>
+                  )}
+                </strong>
+                <span>{formatDate(item.created_at)}</span>
+              </div>
+
+              <strong>{formatPrice(item.amount)}</strong>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="bid-history-pagination">
+        <span>
+          Halaman {bidPage} dari {totalBidPages}
+        </span>
+
+        <div className="bid-history-pagination-buttons">
+          <button
+            type="button"
+            disabled={bidPage === 1}
+            onClick={() => setBidPage((page) => page - 1)}
+          >
+            Sebelumnya
+          </button>
+
+          {Array.from(
+            { length: totalBidPages },
+            (_, index) => index + 1
+          ).map((page) => (
+            <button
+              type="button"
+              key={page}
+              className={bidPage === page ? "active" : ""}
+              onClick={() => setBidPage(page)}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            disabled={bidPage === totalBidPages}
+            onClick={() => setBidPage((page) => page + 1)}
+          >
+            Berikutnya
+          </button>
+        </div>
+      </div>
+    </>
+  )}
+</section>
 
       {imageFullscreen && selectedImage?.image_url && (
         <div

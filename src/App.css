@@ -2801,3 +2801,140 @@
     }
 }
 
+
+/* BID HISTORY SEARCH, SORT AND PAGINATION */
+
+.detail-bids .bid-history-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.detail-bids .bid-history-search,
+.detail-bids .bid-history-sort {
+  min-height: 42px;
+  padding: 10px 13px;
+  border: 1px solid #dedfe2;
+  border-radius: 7px;
+  outline: none;
+  background: #ffffff;
+  color: #383838;
+  font-size: 14px;
+}
+
+.detail-bids .bid-history-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-bids .bid-history-sort {
+  min-width: 145px;
+  cursor: pointer;
+}
+
+.detail-bids .bid-history-search:focus,
+.detail-bids .bid-history-sort:focus {
+  border-color: #999999;
+}
+
+.detail-bids .bid-history-search::placeholder {
+  color: #999999;
+}
+
+.detail-bids .bid-history-empty {
+  padding: 25px 15px;
+  color: #777777;
+  text-align: center;
+}
+
+.detail-bids .detail-state {
+  color: #777777;
+}
+
+.detail-bids .detail-bid-list {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+}
+
+.detail-bids .detail-bid-item {
+  background: #ffffff;
+  border-bottom: 1px solid #eeeeee;
+  color: #383838;
+}
+
+.detail-bids .detail-bid-item > div > strong,
+.detail-bids .detail-bid-item > strong {
+  color: #383838;
+}
+
+.detail-bids .detail-bid-item span {
+  color: #777777;
+}
+
+.detail-bids .detail-bid-item .bid-winner-label {
+  background: #eeeeee;
+  color: #555555;
+}
+
+.detail-bids .bid-history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 20px;
+  color: #777777;
+  font-size: 13px;
+}
+
+.detail-bids .bid-history-pagination-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail-bids .bid-history-pagination-buttons button {
+  min-width: 35px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #dedfe2;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #444444;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.detail-bids .bid-history-pagination-buttons button:hover:not(:disabled) {
+  background: #f2f2f2;
+}
+
+.detail-bids .bid-history-pagination-buttons button.active {
+  border-color: #777777;
+  background: #777777;
+  color: #ffffff;
+}
+
+.detail-bids .bid-history-pagination-buttons button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .detail-bids .bid-history-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .detail-bids .bid-history-search,
+  .detail-bids .bid-history-sort {
+    width: 100%;
+  }
+
+  .detail-bids .bid-history-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
