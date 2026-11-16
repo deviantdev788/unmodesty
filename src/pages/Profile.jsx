@@ -17,6 +17,11 @@ function Profile() {
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
   const [pictureLoading, setPictureLoading] = useState(false);
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [showBlockedUsers, setShowBlockedUsers] = useState(false);
+  const [blockedLoading, setBlockedLoading] = useState(false);
+  const [unblockingId, setUnblockingId] = useState(null);
+  const [blockedError, setBlockedError] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -104,6 +109,80 @@ const handlePictureDelete = async () => {
     }
   };
 
+const fetchBlockedUsers = async () => {
+  setBlockedLoading(true);
+  setBlockedError("");
+
+  try {
+    const token = localStorage.getItem("unmodesty_token");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/blocked-users`,
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json().catch(() => []);
+
+    if (!response.ok) {
+      throw new Error(data.message || "Gagal memuat pengguna yang diblokir.");
+    }
+
+    setBlockedUsers(data);
+  } catch (error) {
+    setBlockedError(error.message);
+  } finally {
+    setBlockedLoading(false);
+  }
+};
+
+const toggleBlockedUsers = () => {
+  const nextState = !showBlockedUsers;
+  setShowBlockedUsers(nextState);
+
+  if (nextState) {
+    fetchBlockedUsers();
+  }
+};
+
+const handleUnblock = async (user) => {
+  setUnblockingId(user.id);
+  setBlockedError("");
+
+  try {
+    const token = localStorage.getItem("unmodesty_token");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/blocked-users/${user.id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.message || "Gagal membuka blokir pengguna.");
+    }
+
+    setBlockedUsers((previous) =>
+      previous.filter((blockedUser) => blockedUser.id !== user.id)
+    );
+  } catch (error) {
+    setBlockedError(error.message);
+  } finally {
+    setUnblockingId(null);
+  }
+};
+  
   if (loading || !profile) {
     return <main className="profile-page">Memuat profil...</main>;
   }
@@ -253,6 +332,67 @@ const handlePictureDelete = async () => {
             </>
           )}
         </div>
+        <div className="profile-content profile-blocked-section">
+  <div className="profile-section-heading">
+    <div>
+      <h2>Pengguna Diblokir</h2>
+      <p className="profile-blocked-description">
+        Kelola pengguna yang tidak diizinkan mengajukan penawaran pada lelangmu.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      className="profile-edit-button"
+      onClick={toggleBlockedUsers}
+    >
+      {showBlockedUsers ? "Tutup" : "Lihat Daftar"}
+    </button>
+  </div>
+
+  {showBlockedUsers && (
+    <div className="profile-blocked-list">
+      {blockedLoading ? (
+        <p className="profile-blocked-empty">Memuat daftar pengguna...</p>
+      ) : blockedError ? (
+        <p className="profile-error">{blockedError}</p>
+      ) : blockedUsers.length === 0 ? (
+        <p className="profile-blocked-empty">
+          Belum ada pengguna yang diblokir.
+        </p>
+      ) : (
+        blockedUsers.map((user) => (
+          <div className="profile-blocked-user" key={user.id}>
+            <div className="profile-blocked-user-info">
+              {user.profile_picture_url ? (
+                <img
+                  src={user.profile_picture_url}
+                  alt={user.name}
+                  className="profile-blocked-avatar"
+                />
+              ) : (
+                <div className="profile-blocked-avatar-placeholder">
+                  {user.name?.charAt(0)?.toUpperCase() || "?"}
+                </div>
+              )}
+
+              <strong>{user.name}</strong>
+            </div>
+
+            <button
+              type="button"
+              className="profile-unblock-button"
+              onClick={() => handleUnblock(user)}
+              disabled={unblockingId === user.id}
+            >
+              {unblockingId === user.id ? "Memproses..." : "Buka Blokir"}
+            </button>
+          </div>
+        ))
+      )}
+    </div>
+  )}
+</div>
       </div>
     </main>
   );

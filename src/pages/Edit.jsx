@@ -25,6 +25,10 @@ function Edit() {
   const [auctions, setAuctions] = useState([]);
   const [selectedAuction, setSelectedAuction] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [blockTarget, setBlockTarget] = useState(null);
+  const [blockedUserIds, setBlockedUserIds] = useState([]);
+  const [blocking, setBlocking] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -94,23 +98,104 @@ function Edit() {
     loadAuctions();
   }, []);
 
-  const selectAuction = (auction) => {
-    setSelectedAuction(auction);
+ const selectAuction = async (auction) => {
+  setDetailLoading(true);
+  setError("");
+  setMessage("");
+
+  try {
+    const [auctionResponse, blockedResponse] = await Promise.all([
+      fetch(`${API_URL}/auctions/${auction.id}`, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      fetch(`${API_URL}/blocked-users`, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    ]);
+
+    const auctionData = await auctionResponse.json().catch(() => ({}));
+    const blockedData = await blockedResponse.json().catch(() => []);
+
+    if (!auctionResponse.ok) {
+      throw new Error(
+        auctionData.message || "Gagal memuat detail lelang."
+      );
+    }
+
+    if (!blockedResponse.ok) {
+      throw new Error(
+        blockedData.message || "Gagal memuat daftar pengguna yang diblokir."
+      );
+    }
+
+    setSelectedAuction(auctionData);
+
+    setBlockedUserIds(
+      blockedData.map((user) => Number(user.id))
+    );
 
     setForm({
-      name: auction.name || "",
-      category: auction.category || "Elektronik",
-      description: auction.description || "",
-      starting_price: auction.starting_price || "",
-      ends_at: toLocalDateTime(auction.ends_at),
+      name: auctionData.name || "",
+      category: auctionData.category || "Elektronik",
+      description: auctionData.description || "",
+      starting_price: auctionData.starting_price || "",
+      ends_at: toLocalDateTime(auctionData.ends_at),
     });
 
-    setExistingImages(auction.images || []);
+    setExistingImages(auctionData.images || []);
     setRemovedImageIds([]);
     setSelectedImages([]);
-    setError("");
-    setMessage("");
-  };
+  } catch (err) {
+    setError(err.message || "Gagal memuat detail lelang.");
+  } finally {
+    setDetailLoading(false);
+  }
+};
+
+const confirmBlock = async () => {
+  if (!blockTarget) return;
+
+  setBlocking(true);
+  setError("");
+  setMessage("");
+
+  try {
+    const response = await fetch(
+      `${API_URL}/blocked-users/${blockTarget.id}`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.message || "Gagal memblokir pengguna.");
+    }
+
+    setBlockedUserIds((previous) => [
+      ...previous,
+      Number(blockTarget.id),
+    ]);
+
+    setMessage(`${blockTarget.name} berhasil diblokir.`);
+    setBlockTarget(null);
+  } catch (err) {
+    setError(err.message || "Gagal memblokir pengguna.");
+  } finally {
+    setBlocking(false);
+  }
+};
 
   const closeEditor = () => {
     setSelectedAuction(null);
@@ -455,6 +540,81 @@ function Edit() {
               </div>
             )}
 
+
+{selectedAuction.bids?.length > 0 && (
+  <section className="edit-bidders-section">
+    <div className="sell-form-heading">
+      <div>
+        <h2>Daftar Penawar</h2>
+        <p>Kelola pengguna yang telah mengajukan penawaran pada lelang ini.</p>
+      </div>
+      <span className="sell-required">
+        {selectedAuction.bids.length} penawaran
+      </span>
+    </div>
+
+    <div className="edit-bidders-list">
+      {Array.from(
+        new Map(
+          selectedAuction.bids.map((bid) => [
+            bid.user_id,
+            bid,
+          ])
+        ).values()
+      ).map((bid) => {
+        const isBlocked = blockedUserIds.includes(
+          Number(bid.user_id)
+        );
+
+        return (
+          <div className="edit-bidder-item" key={bid.user_id}>
+            <div className="edit-bidder-info">
+              {bid.user?.profile_picture_url ? (
+                <img
+                  src={bid.user.profile_picture_url}
+                  alt={bid.user.name}
+                  className="edit-bidder-avatar"
+                />
+              ) : (
+                <div className="edit-bidder-avatar-placeholder">
+                  {bid.user?.name?.charAt(0)?.toUpperCase() || "?"}
+                </div>
+              )}
+
+              <div>
+                <strong>{bid.user?.name || "Pengguna"}</strong>
+                <span>
+                  Penawaran terakhir: Rp{" "}
+                  {Number(bid.amount).toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={
+                isBlocked
+                  ? "edit-blocked-button"
+                  : "edit-block-button"
+              }
+              onClick={() =>
+                !isBlocked && setBlockTarget({
+                  id: bid.user_id,
+                  name: bid.user?.name || "Pengguna",
+                })
+              }
+              disabled={isBlocked || blocking}
+            >
+              {isBlocked ? "Diblokir" : "Blokir"}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+)}
+
+
             <form className="sell-form" onSubmit={handleSubmit}>
               <div className="sell-form-heading">
                 <div>
@@ -705,6 +865,53 @@ function Edit() {
           </div>
         </div>
       )}
+
+{blockTarget && (
+  <div
+    className="edit-modal-overlay"
+    onClick={() => !blocking && setBlockTarget(null)}
+  >
+    <div
+      className="edit-confirm-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="block-modal-title"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="edit-modal-icon">!</div>
+
+      <h2 id="block-modal-title">Blokir Pengguna?</h2>
+
+      <p>
+        Apakah kamu yakin ingin memblokir{" "}
+        <strong>{blockTarget.name}</strong>?
+        Pengguna ini tidak akan dapat mengajukan penawaran
+        pada seluruh lelang milikmu.
+      </p>
+
+      <div className="edit-modal-actions">
+        <button
+          type="button"
+          className="sell-cancel"
+          onClick={() => setBlockTarget(null)}
+          disabled={blocking}
+        >
+          Batal
+        </button>
+
+        <button
+          type="button"
+          className="edit-modal-block"
+          onClick={confirmBlock}
+          disabled={blocking}
+        >
+          {blocking ? "Memblokir..." : "Ya, Blokir"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </main>
   );
 }
