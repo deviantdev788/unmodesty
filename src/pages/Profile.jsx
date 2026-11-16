@@ -385,7 +385,7 @@ const handleUnblock = async (user) => {
               onClick={() => handleUnblock(user)}
               disabled={unblockingId === user.id}
             >
-              {unblockingId === user.id ? "Memproses..." : "Buka Blokir"}
+              {unblockingId === user.id ? "Memproses..." : "Unblock"}
             </button>
           </div>
         ))
