@@ -1,10 +1,7 @@
-
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Sell() {
-  const navigate = useNavigate();
-
   const [form, setForm] = useState({
     name: "",
     category: "Elektronik",
@@ -16,6 +13,7 @@ function Sell() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const imagePreviews = useMemo(() => {
     return selectedImages.map((file) => ({
@@ -120,7 +118,13 @@ function Sell() {
         );
       }
 
-      navigate(`/auctions/${data.auction.id}`);
+      if (!data.auction) {
+        throw new Error(
+          "Server menerima permintaan, tetapi data lelang tidak ditemukan dalam respons."
+        );
+      }
+
+      setSuccess(true);
     } catch (err) {
       setError(err.message || "Gagal membuat lelang.");
     } finally {
@@ -139,164 +143,191 @@ function Sell() {
           </p>
         </div>
 
-        <form className="sell-form" onSubmit={handleSubmit}>
-          <div className="sell-form-heading">
-            <div>
-              <h2>Informasi Barang</h2>
-              <p>Lengkapi detail barang yang ingin kamu lelang.</p>
+        {success ? (
+          <section className="sell-success-panel">
+            <div className="sell-success-icon">✓</div>
+            <h2>Lelang Berhasil Dikirim!</h2>
+            <p>
+              Barangmu berhasil diunggah dan sekarang sedang menunggu
+              persetujuan admin. Kamu dapat melihat statusnya melalui
+              halaman Edit Lelang.
+            </p>
+            <div className="sell-success-status">
+              <span className="auction-status-dot"></span>
+              Pending Approval
             </div>
-            <span className="sell-required">* Wajib diisi</span>
-          </div>
-
-          <div className="sell-form-grid">
-            <div className="sell-field">
-              <label htmlFor="name">Nama Barang <span>*</span></label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Contoh: Kamera Digital Canon"
-                value={form.name}
-                onChange={handleChange}
-                maxLength={255}
-                required
-              />
+            <div className="sell-success-actions">
+              <Link to="/edit" className="sell-submit">
+                Lihat Lelang Saya
+              </Link>
+              <Link to="/auctions" className="sell-cancel">
+                Kembali ke Lelang
+              </Link>
             </div>
-
-            <div className="sell-field">
-              <label htmlFor="category">Kategori <span>*</span></label>
-              <select
-                id="category"
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                required
-              >
-                <option>Elektronik</option>
-                <option>Fashion</option>
-                <option>Aksesori</option>
-                <option>Rumah Tangga</option>
-                <option>Hobi</option>
-                <option>Lainnya</option>
-              </select>
+          </section>
+        ) : (
+          <form className="sell-form" onSubmit={handleSubmit}>
+            <div className="sell-form-heading">
+              <div>
+                <h2>Informasi Barang</h2>
+                <p>Lengkapi detail barang yang ingin kamu lelang.</p>
+              </div>
+              <span className="sell-required">* Wajib diisi</span>
             </div>
 
-            <div className="sell-field sell-field-full">
-              <label htmlFor="description">Deskripsi Barang</label>
-              <textarea
-                id="description"
-                name="description"
-                placeholder="Jelaskan kondisi, spesifikasi, dan detail lainnya..."
-                value={form.description}
-                onChange={handleChange}
-                rows={5}
-              />
-            </div>
-
-            <div className="sell-field">
-              <label htmlFor="starting_price">
-                Harga Awal (Rupiah) <span>*</span>
-              </label>
-              <input
-                id="starting_price"
-                name="starting_price"
-                type="number"
-                placeholder="Contoh: 150000"
-                value={form.starting_price}
-                onChange={handleChange}
-                min="1"
-                step="1"
-                required
-              />
-              <small>Harga awal penawaran lelang.</small>
-            </div>
-
-            <div className="sell-field">
-              <label htmlFor="ends_at">Waktu Berakhir <span>*</span></label>
-              <input
-                id="ends_at"
-                name="ends_at"
-                type="datetime-local"
-                value={form.ends_at}
-                onChange={handleChange}
-                min={new Date(
-                  Date.now() - new Date().getTimezoneOffset() * 60000
-                ).toISOString().slice(0, 16)}
-                required
-              />
-              <small>Tentukan kapan lelang akan ditutup.</small>
-            </div>
-
-            <div className="sell-field sell-field-full">
-              <div className="sell-image-heading">
-                <label htmlFor="auction-images">Foto Barang</label>
-                <span>{selectedImages.length}/5 gambar</span>
+            <div className="sell-form-grid">
+              <div className="sell-field">
+                <label htmlFor="name">Nama Barang <span>*</span></label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Contoh: Kamera Digital Canon"
+                  value={form.name}
+                  onChange={handleChange}
+                  maxLength={255}
+                  required
+                />
               </div>
 
-              <label
-                htmlFor="auction-images"
-                className={`sell-upload-area ${
-                  selectedImages.length >= 5 ? "sell-upload-disabled" : ""
-                }`}
-              >
-                <span className="sell-upload-icon">+</span>
-                <strong>Tambah Foto Barang</strong>
-                <span>Pilih gambar dari perangkatmu</span>
-                <small>JPG, PNG, atau WebP · Maksimal 5 MB per gambar</small>
-              </label>
+              <div className="sell-field">
+                <label htmlFor="category">Kategori <span>*</span></label>
+                <select
+                  id="category"
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  required
+                >
+                  <option>Elektronik</option>
+                  <option>Fashion</option>
+                  <option>Aksesori</option>
+                  <option>Rumah Tangga</option>
+                  <option>Hobi</option>
+                  <option>Lainnya</option>
+                </select>
+              </div>
 
-              <input
-                id="auction-images"
-                className="sell-file-input"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                onChange={handleImageChange}
-                disabled={selectedImages.length >= 5 || loading}
-              />
+              <div className="sell-field sell-field-full">
+                <label htmlFor="description">Deskripsi Barang</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  placeholder="Jelaskan kondisi, spesifikasi, dan detail lainnya..."
+                  value={form.description}
+                  onChange={handleChange}
+                  rows={5}
+                />
+              </div>
 
-              {imagePreviews.length > 0 && (
-                <div className="sell-image-grid">
-                  {imagePreviews.map((image, index) => (
-                    <div className="sell-image-preview" key={`${image.file.name}-${index}`}>
-                      <img src={image.url} alt={`Foto barang ${index + 1}`} />
-                      <button
-                        type="button"
-                        className="sell-image-remove"
-                        onClick={() => removeImage(index)}
-                        disabled={loading}
-                        aria-label={`Hapus foto ${index + 1}`}
-                      >
-                        ×
-                      </button>
-                      <div className="sell-image-info">
-                        <span>{image.file.name}</span>
-                        <small>
-                          {(image.file.size / (1024 * 1024)).toFixed(2)} MB
-                        </small>
-                      </div>
-                    </div>
-                  ))}
+              <div className="sell-field">
+                <label htmlFor="starting_price">
+                  Harga Awal (Rupiah) <span>*</span>
+                </label>
+                <input
+                  id="starting_price"
+                  name="starting_price"
+                  type="number"
+                  placeholder="Contoh: 150000"
+                  value={form.starting_price}
+                  onChange={handleChange}
+                  min="1"
+                  step="1"
+                  required
+                />
+                <small>Harga awal penawaran lelang.</small>
+              </div>
+
+              <div className="sell-field">
+                <label htmlFor="ends_at">Waktu Berakhir <span>*</span></label>
+                <input
+                  id="ends_at"
+                  name="ends_at"
+                  type="datetime-local"
+                  value={form.ends_at}
+                  onChange={handleChange}
+                  min={new Date(
+                    Date.now() - new Date().getTimezoneOffset() * 60000
+                  ).toISOString().slice(0, 16)}
+                  required
+                />
+                <small>Tentukan kapan lelang akan ditutup.</small>
+              </div>
+
+              <div className="sell-field sell-field-full">
+                <div className="sell-image-heading">
+                  <label htmlFor="auction-images">Foto Barang</label>
+                  <span>{selectedImages.length}/5 gambar</span>
                 </div>
-              )}
+
+                <label
+                  htmlFor="auction-images"
+                  className={`sell-upload-area ${
+                    selectedImages.length >= 5 ? "sell-upload-disabled" : ""
+                  }`}
+                >
+                  <span className="sell-upload-icon">+</span>
+                  <strong>Tambah Foto Barang</strong>
+                  <span>Pilih gambar dari perangkatmu</span>
+                  <small>JPG, PNG, atau WebP · Maksimal 5 MB per gambar</small>
+                </label>
+
+                <input
+                  id="auction-images"
+                  className="sell-file-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  onChange={handleImageChange}
+                  disabled={selectedImages.length >= 5 || loading}
+                />
+
+                {imagePreviews.length > 0 && (
+                  <div className="sell-image-grid">
+                    {imagePreviews.map((image, index) => (
+                      <div
+                        className="sell-image-preview"
+                        key={`${image.file.name}-${index}`}
+                      >
+                        <img src={image.url} alt={`Foto barang ${index + 1}`} />
+                        <button
+                          type="button"
+                          className="sell-image-remove"
+                          onClick={() => removeImage(index)}
+                          disabled={loading}
+                          aria-label={`Hapus foto ${index + 1}`}
+                        >
+                          ×
+                        </button>
+                        <div className="sell-image-info">
+                          <span>{image.file.name}</span>
+                          <small>
+                            {(image.file.size / (1024 * 1024)).toFixed(2)} MB
+                          </small>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {error && <div className="sell-error">{error}</div>}
+            {error && <div className="sell-error">{error}</div>}
 
-          <div className="sell-form-footer">
-            <Link to="/auctions" className="sell-cancel">
-              Batal
-            </Link>
-            <button
-              type="submit"
-              className="sell-submit"
-              disabled={loading}
-            >
-              {loading ? "Mengunggah dan Membuat Lelang..." : "Pasang Lelang"}
-            </button>
-          </div>
-        </form>
+            <div className="sell-form-footer">
+              <Link to="/auctions" className="sell-cancel">
+                Batal
+              </Link>
+              <button
+                type="submit"
+                className="sell-submit"
+                disabled={loading}
+              >
+                {loading ? "Mengunggah dan Membuat Lelang..." : "Pasang Lelang"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </main>
   );

@@ -3181,3 +3181,111 @@
     align-self: flex-end;
   }
 }
+
+
+.auction-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 5px 10px;
+  background: #fff5df;
+  border: 1px solid #f2dfb5;
+  border-radius: 20px;
+  color: #a87519;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: help;
+}
+
+.auction-pending-notice {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  margin: 16px 0;
+  padding: 10px 15px;
+  background: #fff8e9;
+  border: 1px solid #f1dfb8;
+  border-radius: 8px;
+  color: #93691e;
+  cursor: help;
+}
+
+.auction-pending-notice strong {
+  font-size: 12px;
+}
+
+.auction-pending-notice > span:last-child {
+  color: #9a865f;
+  font-size: 12px;
+}
+
+.auction-status-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  background: #e3a52e;
+  border-radius: 50%;
+}
+
+.sell-success-panel {
+  padding: 45px 30px;
+  background: #fff;
+  border: 1px solid #e8edf1;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.sell-success-icon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  background: #e9f7ef;
+  border-radius: 50%;
+  color: #29965b;
+  font-size: 29px;
+  font-weight: 700;
+}
+
+.sell-success-panel h2 {
+  margin: 0 0 12px;
+  color: #263449;
+  font-size: 23px;
+}
+
+.sell-success-panel > p {
+  max-width: 480px;
+  margin: 0 auto;
+  color: #788597;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.sell-success-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: fit-content;
+  margin: 22px auto;
+  padding: 9px 15px;
+  background: #fff8e9;
+  border: 1px solid #f1dfb8;
+  border-radius: 20px;
+  color: #93691e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sell-success-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 25px;
+}

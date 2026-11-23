@@ -458,9 +458,14 @@ const confirmBlock = async () => {
                       </div>
 
                       <div className="edit-auction-details">
-                        <span className="edit-auction-category">
-                          {auction.category}
-                        </span>
+{auction.status === "pending" && (
+  <span
+    className="auction-pending-badge"
+    title="Menunggu approval admin"
+  >
+    Pending
+  </span>
+)}
 
                         <h3>{auction.name}</h3>
 
@@ -514,14 +519,16 @@ const confirmBlock = async () => {
           </section>
         ) : (
           <>
-            <button
-              type="button"
-              className="edit-back-button"
-              onClick={closeEditor}
-              disabled={saving}
-            >
-              ← Kembali ke Lelang Saya
-            </button>
+{selectedAuction.status === "pending" && (
+  <div
+    className="auction-pending-notice"
+    title="Menunggu approval admin"
+  >
+    <span className="auction-status-dot"></span>
+    <strong>Pending</strong>
+    <span>Menunggu approval admin</span>
+  </div>
+)}
 
             {isReadOnly && (
               <div className="edit-success">
